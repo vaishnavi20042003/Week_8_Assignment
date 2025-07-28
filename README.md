@@ -1,128 +1,83 @@
-# 🚖 NYC Taxi Data Analysis using PySpark
+🚕 NYC Cab Trip Analysis using PySpark  
+This project showcases how to ingest NYC Taxi trip datasets into Azure Data Lake / Blob Storage / Databricks, transform it with PySpark DataFrames, and execute a variety of analytical tasks to gather insights on fares, high-traffic zones, and payment statistics.
 
-This project demonstrates how to load NYC Taxi trip data into **DataLake / Blob Storage / Databricks**, process it using **PySpark DataFrames**, and run various analytical queries to extract insights such as revenue, popular locations, and payment trends.
+📁 Project Layout  
+NYC-Cab-Trip-Analysis/  
+│  
+├── dataset/              # Raw data samples (CSV or JSON)  
+├── notebooks/            # PySpark exploration notebooks  
+├── results/              # Output files in Parquet / query results  
+├── etl_jobs/             # PySpark ETL transformation scripts  
+├── README.md             # Project summary and steps  
 
----
+📥 Data Reference  
+The data used in this demo originates from NYC TLC's official trip records:
 
-## 📁 Project Structure
+Trip Data Sample (Yellow Cabs - February 2020)  
+🔗 Download CSV  
+📂 Official Source: NYC Taxi and Limousine Commission  
 
+🔧 Workflow Summary  
 
-NYC-Taxi-Data-Analysis/
-│
-├── data/ # Sample data (CSV or JSON)
-├── notebooks/ # PySpark notebooks
-├── output/ # Output Parquet files / results
-├── scripts/ # PySpark ETL scripts
-├── README.md # Project documentation
+📌 Load Trip Data  
+- Ingest CSV records into DBFS (Databricks File System)  
 
+📌 Data Cleanup & Shaping  
+- Process data using PySpark DataFrame operations  
+- Flatten any nested JSON if applicable  
 
+📌 Persist Processed Data  
+- Store transformed records as external Parquet tables for query usage  
 
+📊 Key Queries Executed  
+All queries below utilize either Spark SQL or DataFrame transformations within Databricks notebooks.
 
----
+✅ Query 1: Compute Earnings Column  
+Append a new column `Earnings` by summing:  
+- fare_amount  
+- extra  
+- mta_tax  
+- improvement_surcharge  
+- tip_amount  
+- tolls_amount  
+- total_amount  
 
-## 📥 Dataset Source
+✅ Query 2: Total Passengers by Zone  
+Aggregate total number of passengers grouped by pickup zone  
 
-Sample data used in this project is from NYC's official trip record data:
+✅ Query 3: Vendor Revenue Stats (Live)  
+Calculate live average fare and cumulative revenue by vendor ID  
 
-- **Trip Record Data (Yellow Cabs - Jan 2020)**  
-  🔗 [Download CSV](https://s3.amazonaws.com/nyc-tlc/trip+data/yellow_tripdata_2020-01.csv)  
-  📂 Official source: [NYC Taxi & Limousine Commission](http://www.nyc.gov/html/tlc/html/about/trip_record_data.shtml)
+✅ Query 4: Analyze Payment Preferences  
+Use window function or streaming to count occurrences of each payment method over time  
 
----
+✅ Query 5: Top Vendors for a Given Day  
+Identify the top 2 vendors by total earnings on a specific date, including passenger count and total miles  
 
-## 🔧 Steps Performed
+✅ Query 6: Highest Traffic Route  
+Determine the route (pickup → dropoff pair) with the most passengers  
 
-1. **Load Data**  
-   - Load CSV data into **DBFS (Databricks File System)**.
+✅ Query 7: Live Popular Pickup Areas  
+Track top pickup locations by passenger volume in the last few seconds using streaming window logic  
 
-2. **Data Preparation**  
-   - Clean and transform the data using **PySpark DataFrame API**.
-   - (Optional) Flatten JSON fields if working with nested structures.
+💻 Stack & Tools  
+- Databricks / Azure Blob Storage / Data Lake  
+- Apache Spark (via PySpark)  
+- Parquet Storage Format  
+- Spark SQL / DataFrame API  
+- Streaming / Window-based processing (optional)  
 
-3. **Save to External Table**  
-   - Write the cleaned DataFrame as an external **Parquet table** for downstream querying.
+🧠 Core Concepts Learned  
+- Performing large-scale data cleanup and summarization with PySpark  
+- Applying real-time and batch techniques using Spark APIs  
+- Designing efficient Spark queries using DataFrame and SQL mix  
+- Managing external storage using columnar formats like Parquet  
 
----
+📎 Helpful Snippets  
 
-## 📊 Analytical Queries Performed
+# Read raw trip data from mounted blob storage  
+df = spark.read.csv("/mnt/storage/yellow_tripdata_2020-02.csv", header=True, inferSchema=True)  
 
-All queries are executed using **PySpark SQL / DataFrame API** in Databricks notebooks.
+# Save cleaned data as Parquet for analytics  
+df.write.mode("overwrite").parquet("/mnt/results/yellow_tripdata_cleaned.parquet")  
 
-### ✅ Query 1: Add a Revenue Column
-
-Add a new column `Revenue` which is the sum of:
-
-- `Fare_amount`
-- `Extra`
-- `MTA_tax`
-- `Improvement_surcharge`
-- `Tip_amount`
-- `Tolls_amount`
-- `Total_amount`
-
----
-
-### ✅ Query 2: Passenger Count by Area
-
-Group data by pickup area and count total number of passengers.
-
----
-
-### ✅ Query 3: Realtime Vendor Earnings
-
-Calculate real-time **average fare and total earnings** for each of the **two vendors** in the dataset.
-
----
-
-### ✅ Query 4: Payment Mode Analysis
-
-Get **moving count** (streaming or window-based) of payments made using each **payment type**.
-
----
-
-### ✅ Query 5: Top Vendors on Specific Date
-
-Get the **top two vendors** based on total revenue on a particular date.  
-Include number of passengers and total trip distance.
-
----
-
-### ✅ Query 6: Busiest Route
-
-Identify the **most traveled route** (pickup to drop-off) with the **highest passenger count**.
-
----
-
-### ✅ Query 7: Top Pickup Locations (Real-time)
-
-Get **top pickup locations** with most passengers in the **last 5 or 10 seconds** (real-time streaming or simulated window).
-
----
-
-## 💻 Technologies Used
-
-- **Databricks / Azure Blob Storage / DataLake**
-- **Apache Spark (PySpark)**
-- **Parquet Format**
-- **SQL / DataFrame API**
-- **Streaming / Window Functions (Optional)**
-
----
-
-## 🧠 Key Learnings
-
-- Using PySpark for large-scale data transformation and aggregation.
-- Implementing both batch and simulated real-time processing.
-- Writing optimized queries using Spark SQL and DataFrame transformations.
-- Working with external data storage and formats like Parquet.
-
----
-
-## 📎 Related Commands & Tips
-
-```python
-# Load CSV into DataFrame
-df = spark.read.csv("/mnt/blob/yellow_tripdata_2020-01.csv", header=True, inferSchema=True)
-
-# Write to Parquet as external table
-df.write.mode("overwrite").parquet("/mnt/output/yellow_tripdata_cleaned.parquet")
